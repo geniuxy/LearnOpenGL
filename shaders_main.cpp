@@ -7,13 +7,14 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include "camera.h"
 
 #include "Shader.h"
 #include <iostream>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
 // settings
@@ -23,18 +24,14 @@ const unsigned int SCR_HEIGHT = 600;
 // 笑脸的可见度
 float mixValue = 0.2f;
 
-glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f,  3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f,  0.0f);
-
 float deltaTime = 0.0f; // 当前帧与上一帧的时间差
 float lastFrame = 0.0f; // 上一帧的时间
 
+// camera
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-float lastX = SCR_WIDTH / 2.f, lastY = SCR_HEIGHT / 2.f;
-float yaw = -90.f; // 初始yaw=0.f是指向右边的，需要指向屏幕里
-float pitch = 0.f;
-float fov = 45.f;
 
 int main()
 {
@@ -230,8 +227,8 @@ int main()
         glm::mat4 view = glm::mat4(1.0f);
         glm::mat4 projection = glm::mat4(1.0f);
         model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
-        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
+        view = camera.GetViewMatrix();
+        projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f, 0.1f, 100.0f);
         // retrieve the matrix uniform locations
         unsigned int modelLoc = glGetUniformLocation(ourShader.ID, "model");
         unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
@@ -277,20 +274,22 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    float cameraSpeed = 2.5f * deltaTime;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= cameraSpeed * cameraFront;
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(LEFT, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+        camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
-    if(firstMouse)
+    float xpos = static_cast<float>(xposIn);
+    float ypos = static_cast<float>(yposIn);
+
+    if (firstMouse)
     {
         lastX = xpos;
         lastY = ypos;
@@ -298,31 +297,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; // 鼠标上移ypos变小，pitch变大，
+    float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.05f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    yaw   += xoffset;
-    pitch += yoffset;
-
-    pitch = std::min(pitch, 89.0f);
-    pitch = std::max(pitch, -89.0f);
-
-    glm::vec3 front;
-    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    front.y = sin(glm::radians(pitch));
-    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    cameraFront = glm::normalize(front);
+    camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-    if(fov >= 1.0f && fov <= 90.0f)
-        fov -= yoffset;
-    fov = std::max(fov, 1.0f);
-    fov = std::min(fov, 90.0f);
+    camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
