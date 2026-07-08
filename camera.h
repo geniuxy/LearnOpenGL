@@ -78,7 +78,7 @@ public:
             Position -= Right * velocity;
         if (direction == RIGHT)
             Position += Right * velocity;
-        Position.y = 0.f; // 摄像机只能呆在xz平面上
+        // Position.y = 0.f; // 摄像机只能呆在xz平面上
     }
 
     // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
