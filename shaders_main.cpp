@@ -151,7 +151,7 @@ int main()
 
         // be sure to activate shader when setting uniforms/drawing objects
         lightingShader.Use();
-        lightingShader.SetVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lightingShader.SetVec3("objectColor", 0.0f, 0.0f, 0.0f);
         lightingShader.SetVec3("lightColor",  1.0f, 1.0f, 1.0f);
 
         // view/projection transformations
