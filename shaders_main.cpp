@@ -157,6 +157,7 @@ int main()
         lightingShader.SetVec3("objectColor", 1.0f, 0.5f, 0.31f);
         lightingShader.SetVec3("lightColor", 1.0f, 1.0f, 1.0f);
         lightingShader.SetVec3("lightPos", lightPos);
+        lightingShader.SetVec3("viewPos", camera.Position);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f,
