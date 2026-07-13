@@ -3,10 +3,13 @@ out vec4 FragColor;
 
 in vec3 FragPos;  
 in vec3 Normal;
+in vec2 TexCoords;
 
 struct Material {
-    vec3 ambient; // 环境光照下这个表面反射的是什么颜色，通常与表面的颜色相同
-    vec3 diffuse; // 漫反射光照下表面的颜色
+    // vec3 ambient; // 环境光照下这个表面反射的是什么颜色，通常与表面的颜色相同
+    // vec3 diffuse; // 漫反射光照下表面的颜色
+
+    sampler2D diffuse; // 漫反射光照改成漫反射贴图，同时移除了环境光材质颜色向量，因为环境光颜色在几乎所有情况下都等于漫反射颜色
     vec3 specular; // 表面上镜面高光的颜色
     float shininess; // 影响镜面高光的散射/半径
 }; 
@@ -25,14 +28,14 @@ uniform Light light;
 
 void main()
 {
-    // 环境光
-    vec3 ambient = light.ambient * material.ambient;
+    // ambient
+    vec3 ambient = light.ambient * texture(material.diffuse, TexCoords).rgb;
 
     // 漫反射 
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * (diff * material.diffuse);
+    vec3 diffuse = light.diffuse * diff * texture(material.diffuse, TexCoords).rgb;  
 
     // 镜面光
     vec3 viewDir = normalize(viewPos - FragPos);
