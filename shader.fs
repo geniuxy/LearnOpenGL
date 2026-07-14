@@ -12,6 +12,7 @@ struct Material {
 
     sampler2D diffuse; // 漫反射光照改成漫反射贴图，同时移除了环境光材质颜色向量，因为环境光颜色在几乎所有情况下都等于漫反射颜色
     sampler2D specular; // 镜面光贴图
+    sampler2D emission; // 放射光贴图(模型上一些光的颜色)
     float shininess; // 影响镜面高光的散射/半径
 }; 
 
@@ -42,8 +43,11 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoords));  
+    vec3 specular = light.specular * spec * texture(material.specular, TexCoords).rgb;  
 
-    vec3 result = ambient + diffuse + specular;
+    // 放射光
+    vec3 emission = vec3(texture(material.emission, TexCoords));
+
+    vec3 result = ambient + diffuse + specular + emission;
     FragColor = vec4(result, 1.0);
 }
