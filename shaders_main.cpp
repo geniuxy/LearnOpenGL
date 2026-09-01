@@ -181,7 +181,10 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
         lightingShader.Use();
-        lightingShader.SetVec3("light.position", lightPos);
+        // lightingShader.SetVec3("light.position", lightPos);
+        lightingShader.SetVec3("light.position", camera.Position);
+        lightingShader.SetVec3("light.direction", camera.Front);
+        lightingShader.SetFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
         lightingShader.SetVec3("viewPos", camera.Position);
         // light properties
         lightingShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f); 
