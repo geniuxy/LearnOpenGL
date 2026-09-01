@@ -32,6 +32,9 @@ float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
+// lighting
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 int main()
 {
     glfwInit();
@@ -178,12 +181,15 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // also clear the depth buffer now!
 
         lightingShader.Use();
-        lightingShader.SetVec3("light.direction", -0.2f, -1.0f, -0.3f);
+        lightingShader.SetVec3("light.position", lightPos);
         lightingShader.SetVec3("viewPos", camera.Position);
         // light properties
         lightingShader.SetVec3("light.ambient", 0.2f, 0.2f, 0.2f); 
         lightingShader.SetVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         lightingShader.SetVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        lightingShader.SetFloat("light.constant",  1.0f);
+        lightingShader.SetFloat("light.linear",    0.09f);
+        lightingShader.SetFloat("light.quadratic", 0.032f);
 
         // material properties
         lightingShader.SetFloat("material.shininess", 32.0f);
@@ -217,6 +223,18 @@ int main()
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        // also draw the lamp object
+        lightCubeShader.Use();
+        lightCubeShader.SetMat4("projection", projection);
+        lightCubeShader.SetMat4("view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        lightCubeShader.SetMat4("model", model);
+
+        glBindVertexArray(lightCubeVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // 检查并调用事件，交换缓冲
         glfwSwapBuffers(window); // 交换颜色缓冲
